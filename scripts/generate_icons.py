@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate sad AWS logo icons (frown instead of smile)."""
+
 import math
 import pathlib
 

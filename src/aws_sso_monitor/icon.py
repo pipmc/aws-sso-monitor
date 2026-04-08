@@ -1,4 +1,5 @@
 """Paths to icon resources."""
+
 import pathlib
 
 _RESOURCES = pathlib.Path(__file__).parent / "resources"

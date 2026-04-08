@@ -83,7 +83,9 @@ def get_session_statuses(
     for session in sessions:
         expires_at = cache_tokens.get(session.start_url)
         if expires_at is None:
-            states.append(SessionState(session=session, status=SessionStatus.UNKNOWN, expires_at=None))
+            states.append(
+                SessionState(session=session, status=SessionStatus.UNKNOWN, expires_at=None)
+            )
             continue
 
         remaining = expires_at - now

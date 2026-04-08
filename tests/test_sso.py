@@ -82,7 +82,9 @@ def test_session_status_valid(tmp_path: pathlib.Path) -> None:
     cache_dir = tmp_path / "cache"
     cache_dir.mkdir()
     now = datetime.datetime.now(datetime.UTC)
-    _write_cache_file(cache_dir, "abc.json", "https://myorg.awsapps.com/start", now + datetime.timedelta(hours=2))
+    _write_cache_file(
+        cache_dir, "abc.json", "https://myorg.awsapps.com/start", now + datetime.timedelta(hours=2)
+    )
 
     states = sso.get_session_statuses([_make_session()], cache_dir, now=now)
     assert len(states) == 1
@@ -94,7 +96,9 @@ def test_session_status_expired(tmp_path: pathlib.Path) -> None:
     cache_dir = tmp_path / "cache"
     cache_dir.mkdir()
     now = datetime.datetime.now(datetime.UTC)
-    _write_cache_file(cache_dir, "abc.json", "https://myorg.awsapps.com/start", now - datetime.timedelta(hours=1))
+    _write_cache_file(
+        cache_dir, "abc.json", "https://myorg.awsapps.com/start", now - datetime.timedelta(hours=1)
+    )
 
     states = sso.get_session_statuses([_make_session()], cache_dir, now=now)
     assert states[0].status == sso.SessionStatus.EXPIRED
@@ -104,7 +108,12 @@ def test_session_status_expiring_soon(tmp_path: pathlib.Path) -> None:
     cache_dir = tmp_path / "cache"
     cache_dir.mkdir()
     now = datetime.datetime.now(datetime.UTC)
-    _write_cache_file(cache_dir, "abc.json", "https://myorg.awsapps.com/start", now + datetime.timedelta(minutes=5))
+    _write_cache_file(
+        cache_dir,
+        "abc.json",
+        "https://myorg.awsapps.com/start",
+        now + datetime.timedelta(minutes=5),
+    )
 
     states = sso.get_session_statuses([_make_session()], cache_dir, now=now)
     assert states[0].status == sso.SessionStatus.EXPIRING_SOON
@@ -122,7 +131,9 @@ def test_ignores_client_registration_files(tmp_path: pathlib.Path) -> None:
     cache_dir.mkdir()
     # Client registration: has clientId but no startUrl/accessToken
     (cache_dir / "client.json").write_text(
-        json.dumps({"clientId": "abc", "clientSecret": "secret", "expiresAt": "2099-01-01T00:00:00Z"})
+        json.dumps(
+            {"clientId": "abc", "clientSecret": "secret", "expiresAt": "2099-01-01T00:00:00Z"}
+        )
     )
     states = sso.get_session_statuses([_make_session()], cache_dir)
     assert states[0].status == sso.SessionStatus.UNKNOWN

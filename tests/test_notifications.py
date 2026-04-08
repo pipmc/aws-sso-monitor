@@ -16,14 +16,20 @@ def _make_state(
 
 def test_no_notification_when_valid() -> None:
     tracker = notifications.NotificationTracker()
-    state = _make_state(status=sso.SessionStatus.VALID, expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2))
+    state = _make_state(
+        status=sso.SessionStatus.VALID,
+        expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2),
+    )
     pending = tracker.check([state])
     assert pending == []
 
 
 def test_expired_fires_once() -> None:
     tracker = notifications.NotificationTracker()
-    state = _make_state(status=sso.SessionStatus.EXPIRED, expires_at=datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1))
+    state = _make_state(
+        status=sso.SessionStatus.EXPIRED,
+        expires_at=datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1),
+    )
 
     first = tracker.check([state])
     assert len(first) == 1
@@ -35,7 +41,10 @@ def test_expired_fires_once() -> None:
 
 def test_expiring_soon_fires_once() -> None:
     tracker = notifications.NotificationTracker()
-    state = _make_state(status=sso.SessionStatus.EXPIRING_SOON, expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=5))
+    state = _make_state(
+        status=sso.SessionStatus.EXPIRING_SOON,
+        expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=5),
+    )
 
     first = tracker.check([state])
     assert len(first) == 1
@@ -80,7 +89,10 @@ def test_expiring_then_expired_fires_both() -> None:
 
 def test_notification_contains_url() -> None:
     tracker = notifications.NotificationTracker()
-    state = _make_state(status=sso.SessionStatus.EXPIRED, expires_at=datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1))
+    state = _make_state(
+        status=sso.SessionStatus.EXPIRED,
+        expires_at=datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1),
+    )
     pending = tracker.check([state])
     assert pending[0].url == "https://myorg.awsapps.com/start"
 
