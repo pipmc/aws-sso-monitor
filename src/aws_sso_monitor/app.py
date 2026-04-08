@@ -1,6 +1,7 @@
 """macOS menu bar app that monitors AWS SSO session expiry."""
 
 import datetime
+import logging
 import pathlib
 import webbrowser
 
@@ -8,11 +9,13 @@ import rumps
 
 # rumps.__init__ shadows the notifications module with the decorator function,
 # so we must import the Notification class directly
-from rumps.notifications import Notification as _RumpsNotification
+from rumps.notifications import Notification as _RumpsNotification  # noqa: E402
 
-import aws_sso_monitor.icon as icon
-import aws_sso_monitor.notifications as notifications
-import aws_sso_monitor.sso as sso
+import aws_sso_monitor.icon as icon  # noqa: E402
+import aws_sso_monitor.notifications as notifications  # noqa: E402
+import aws_sso_monitor.sso as sso  # noqa: E402
+
+log = logging.getLogger(__name__)
 
 CONFIG_PATH = pathlib.Path.home() / ".aws" / "config"
 CACHE_DIR = pathlib.Path.home() / ".aws" / "sso" / "cache"
@@ -66,6 +69,11 @@ class SSOMonitorApp(rumps.App):
     def _do_check(self) -> None:
         sessions = sso.parse_sso_sessions(CONFIG_PATH)
         states = sso.get_session_statuses(sessions, CACHE_DIR)
+        log.info(
+            "Checked %d session(s): %s",
+            len(states),
+            ", ".join(f"{s.session.name}={s.status.value}" for s in states),
+        )
         self._rebuild_menu(states)
         pending = self._tracker.check(states)
         for notif in pending:
@@ -130,4 +138,8 @@ class SSOMonitorApp(rumps.App):
 
 
 def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
     SSOMonitorApp().run()

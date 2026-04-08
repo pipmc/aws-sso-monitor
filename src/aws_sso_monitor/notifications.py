@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 
 import aws_sso_monitor.sso as sso
 
@@ -15,6 +16,13 @@ class _TrackedSession:
     last_expires_at: str
     notified_expiring: bool = False
     notified_expired: bool = False
+
+
+def _minutes_remaining(expires_at: datetime.datetime | None) -> int:
+    if expires_at is None:
+        return 0
+    delta = expires_at - datetime.datetime.now(datetime.UTC)
+    return max(0, int(delta.total_seconds()) // 60)
 
 
 class NotificationTracker:
@@ -38,10 +46,11 @@ class NotificationTracker:
 
             if state.status == sso.SessionStatus.EXPIRING_SOON and not tracked.notified_expiring:
                 tracked.notified_expiring = True
+                minutes = _minutes_remaining(state.expires_at)
                 pending.append(
                     PendingNotification(
                         title="AWS SSO Expiring Soon",
-                        message=f"Session '{name}' is expiring soon",
+                        message=f"Session '{name}' expires in {minutes} minutes",
                         url=state.session.start_url,
                     )
                 )

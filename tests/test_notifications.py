@@ -49,6 +49,7 @@ def test_expiring_soon_fires_once() -> None:
     first = tracker.check([state])
     assert len(first) == 1
     assert "expiring" in first[0].title.lower()
+    assert "minutes" in first[0].message
 
     second = tracker.check([state])
     assert second == []
