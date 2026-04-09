@@ -6,11 +6,7 @@
     <string>systems.intelligible.aws-sso-monitor</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/homebrew/bin/uv</string>
-        <string>run</string>
-        <string>--project</string>
-        <string>/Users/pip/Code/aws-sso-monitor</string>
-        <string>aws-sso-monitor</string>
+        <string>/Applications/AWS SSO Monitor.app/Contents/MacOS/AWS SSO Monitor</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
