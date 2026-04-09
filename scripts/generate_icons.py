@@ -145,8 +145,58 @@ def generate_menubar_icons() -> None:
         print(f"  Created {path.name} ({size}x{size})")
 
 
+def generate_app_icon() -> None:
+    """Generate .icns app icon (sad AWS face) for the macOS app bundle."""
+    import shutil
+    import subprocess
+
+    build_dir = pathlib.Path(__file__).parent.parent / "build"
+    iconset_dir = build_dir / "icon.iconset"
+    if iconset_dir.exists():
+        shutil.rmtree(iconset_dir)
+    iconset_dir.mkdir(parents=True)
+
+    sizes = [
+        ("icon_16x16.png", 16),
+        ("icon_16x16@2x.png", 32),
+        ("icon_32x32.png", 32),
+        ("icon_32x32@2x.png", 64),
+        ("icon_128x128.png", 128),
+        ("icon_128x128@2x.png", 256),
+        ("icon_256x256.png", 256),
+        ("icon_256x256@2x.png", 512),
+        ("icon_512x512.png", 512),
+        ("icon_512x512@2x.png", 1024),
+    ]
+
+    for filename, size in sizes:
+        # SVG viewBox is 304x182 (landscape). Fit by width.
+        render_w = size
+        render_h = int(size * 182 / 304)
+
+        svg = _build_svg(sad=True, colour=True, text_stroke_width=2)
+        rendered = _svg_to_pil(svg, render_w, render_h)
+
+        # Center on a square canvas with white background
+        img = PIL.Image.new("RGBA", (size, size), (255, 255, 255, 255))
+        offset_x = (size - render_w) // 2
+        offset_y = (size - render_h) // 2
+        img.paste(rendered, (offset_x, offset_y), rendered)
+
+        img.save(iconset_dir / filename)
+
+    icns_path = build_dir / "icon.icns"
+    subprocess.run(
+        ["iconutil", "-c", "icns", str(iconset_dir), "-o", str(icns_path)],
+        check=True,
+    )
+    shutil.rmtree(iconset_dir)
+    print(f"  Created {icns_path}")
+
+
 if __name__ == "__main__":
     print("Generating AWS SSO Monitor icons...")
     RESOURCES_DIR.mkdir(parents=True, exist_ok=True)
     generate_menubar_icons()
-    print(f"Done. Icons in {RESOURCES_DIR}")
+    generate_app_icon()
+    print("Done.")
