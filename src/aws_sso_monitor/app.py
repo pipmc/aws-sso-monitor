@@ -4,10 +4,9 @@ import datetime
 import logging
 import pathlib
 import shutil
-import subprocess
-import threading
 import webbrowser
 
+import desktop_notifier
 import rumps
 
 import aws_sso_monitor.icon as icon
@@ -38,33 +37,23 @@ def _format_status(state: sso.SessionState) -> str:
     return f"{name}: {total_minutes}m remaining"
 
 
+_notifier = desktop_notifier.DesktopNotifierSync(app_name="AWS SSO Monitor")
+
+
 def _send_notification(notif: notifications.PendingNotification) -> None:
-    """Send a macOS notification via alerter with an 'Open SSO' action button."""
-    cmd = [
-        "alerter",
-        "--message",
-        notif.message,
-        "--title",
-        notif.title,
-        "--closeLabel",
-        "Dismiss",
-        "--actions",
-        "Open SSO",
-        "--group",
-        notif.group,
-        "--sound",
-        "default",
-        "--appIcon",
-        str(icon.NOTIFICATION_ICON_SAD),
-    ]
-
-    def _run() -> None:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-        if result.stdout.strip() == "Open SSO":
-            webbrowser.open(notif.url)
-
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
+    """Send a macOS notification with an 'Open SSO' action button."""
+    _notifier.send(
+        title=notif.title,
+        message=notif.message,
+        buttons=[
+            desktop_notifier.Button(
+                title="Open SSO",
+                on_pressed=lambda: webbrowser.open(notif.url),
+            ),
+        ],
+        sound=desktop_notifier.DEFAULT_SOUND,
+        thread=notif.group,
+    )
 
 
 class SSOMonitorApp(rumps.App):
