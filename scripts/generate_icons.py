@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Generate icons from the official AWS logo SVG.
 
-Produces four PNGs:
+Produces three PNGs:
   - menubar-icon.png          (happy, black template for macOS menu bar)
   - menubar-icon-sad.png      (sad/frown, black template)
-  - notification-icon.png     (happy, full colour)
-  - notification-icon-sad.png (sad/frown, full colour)
+  - notification-icon-sad.png (sad/frown, full colour for alerter notifications)
 
 The "sad" variants flip the orange arrow vertically so the smile becomes a frown.
 Text strokes are added to improve legibility at small sizes.
@@ -147,8 +146,8 @@ def generate_menubar_icons() -> None:
         print(f"  Created {path.name} ({size}x{size})")
 
 
-def generate_notification_icons() -> None:
-    """Generate 256x256 colour icons for notifications.
+def generate_notification_icon() -> None:
+    """Generate 256x256 sad colour icon for alerter notifications.
 
     The logo is scaled to fit inside the circular mask that macOS applies
     to notification icons, with padding so nothing gets cropped.
@@ -160,24 +159,22 @@ def generate_notification_icons() -> None:
     render_w = inner
     render_h = int(inner * 182 / 304)
 
-    for sad in (False, True):
-        svg = _build_svg(sad=sad, colour=True, text_stroke_width=2)
-        rendered = _svg_to_pil(svg, render_w, render_h)
+    svg = _build_svg(sad=True, colour=True, text_stroke_width=2)
+    rendered = _svg_to_pil(svg, render_w, render_h)
 
-        img = PIL.Image.new("RGBA", (size, size), (255, 255, 255, 255))
-        offset_x = (size - render_w) // 2
-        offset_y = (size - render_h) // 2
-        img.paste(rendered, (offset_x, offset_y), rendered)
+    img = PIL.Image.new("RGBA", (size, size), (255, 255, 255, 255))
+    offset_x = (size - render_w) // 2
+    offset_y = (size - render_h) // 2
+    img.paste(rendered, (offset_x, offset_y), rendered)
 
-        suffix = "-sad" if sad else ""
-        path = RESOURCES_DIR / f"notification-icon{suffix}.png"
-        img.save(path)
-        print(f"  Created {path.name} ({size}x{size})")
+    path = RESOURCES_DIR / "notification-icon-sad.png"
+    img.save(path)
+    print(f"  Created {path.name} ({size}x{size})")
 
 
 if __name__ == "__main__":
     print("Generating AWS SSO Monitor icons...")
     RESOURCES_DIR.mkdir(parents=True, exist_ok=True)
     generate_menubar_icons()
-    generate_notification_icons()
+    generate_notification_icon()
     print(f"Done. Icons in {RESOURCES_DIR}")
