@@ -88,16 +88,6 @@ def test_expiring_then_expired_fires_both() -> None:
     assert len(pending) == 1
 
 
-def test_notification_contains_url() -> None:
-    tracker = notifications.NotificationTracker()
-    state = _make_state(
-        status=sso.SessionStatus.EXPIRED,
-        expires_at=datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=1),
-    )
-    pending = tracker.check([state])
-    assert pending[0].url == "https://myorg.awsapps.com/start"
-
-
 def test_unknown_status_no_notification() -> None:
     tracker = notifications.NotificationTracker()
     state = _make_state(status=sso.SessionStatus.UNKNOWN, expires_at=None)
@@ -109,7 +99,6 @@ def test_pending_notification_has_group_field() -> None:
     notif = notifications.PendingNotification(
         title="AWS SSO Expiring Soon",
         message="Session 'dev' expires in 5 minutes",
-        url="https://start.awsapps.com/start",
         group="dev",
     )
     assert notif.group == "dev"

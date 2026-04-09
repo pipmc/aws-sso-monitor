@@ -3,7 +3,7 @@
 import datetime
 import logging
 import pathlib
-import webbrowser
+import subprocess
 
 import desktop_notifier
 import rumps
@@ -39,6 +39,15 @@ def _format_status(state: sso.SessionState) -> str:
 _notifier = desktop_notifier.DesktopNotifierSync(app_name="AWS SSO Monitor")
 
 
+def _open_sso_login(session_name: str) -> None:
+    """Spawn 'aws sso login' for the given session in the background."""
+    subprocess.Popen(
+        ["aws", "sso", "login", "--sso-session", session_name],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
 def _send_notification(notif: notifications.PendingNotification) -> None:
     """Send a macOS notification with an 'Open SSO' action button."""
     _notifier.send(
@@ -47,7 +56,7 @@ def _send_notification(notif: notifications.PendingNotification) -> None:
         buttons=[
             desktop_notifier.Button(
                 title="Open SSO",
-                on_pressed=lambda: webbrowser.open(notif.url),
+                on_pressed=lambda: _open_sso_login(notif.group),
             ),
         ],
         sound=desktop_notifier.DEFAULT_SOUND,
@@ -104,7 +113,7 @@ class SSOMonitorApp(rumps.App):
                 sso.SessionStatus.EXPIRED,
                 sso.SessionStatus.EXPIRING_SOON,
             ):
-                item.set_callback(lambda _, url=state.session.start_url: webbrowser.open(url))
+                item.set_callback(lambda _, name=state.session.name: _open_sso_login(name))
             self.menu.add(item)
         self.menu.add(None)  # separator
         self.menu.add(rumps.MenuItem("Check Now", callback=self._on_check_now))

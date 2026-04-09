@@ -8,7 +8,6 @@ import aws_sso_monitor.sso as sso
 class PendingNotification:
     title: str
     message: str
-    url: str
     group: str
 
 
@@ -52,7 +51,6 @@ class NotificationTracker:
                     PendingNotification(
                         title="AWS SSO Expiring Soon",
                         message=f"Session '{name}' expires in {minutes} minutes",
-                        url=state.session.start_url,
                         group=name,
                     )
                 )
@@ -62,7 +60,6 @@ class NotificationTracker:
                     PendingNotification(
                         title="AWS SSO Session Expired",
                         message=f"Session '{name}' has expired",
-                        url=state.session.start_url,
                         group=name,
                     )
                 )

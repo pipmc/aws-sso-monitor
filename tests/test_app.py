@@ -1,5 +1,5 @@
+import subprocess
 import unittest.mock
-import webbrowser
 
 import pytest
 
@@ -11,7 +11,6 @@ def test_send_notification_calls_desktop_notifier():
     notif = notifications.PendingNotification(
         title="AWS SSO Expiring Soon",
         message="Session 'dev' expires in 5 minutes",
-        url="https://start.awsapps.com/start",
         group="dev",
     )
 
@@ -28,11 +27,10 @@ def test_send_notification_calls_desktop_notifier():
         assert kwargs["sound"] is not None
 
 
-def test_send_notification_button_opens_url():
+def test_send_notification_button_runs_sso_login():
     notif = notifications.PendingNotification(
         title="AWS SSO Expired",
         message="Session 'prod' has expired",
-        url="https://my-sso.awsapps.com/start",
         group="prod",
     )
 
@@ -40,9 +38,13 @@ def test_send_notification_button_opens_url():
         app._send_notification(notif)
         button = mock_send.call_args.kwargs["buttons"][0]
 
-    with unittest.mock.patch.object(webbrowser, "open") as mock_open:
+    with unittest.mock.patch.object(subprocess, "Popen") as mock_popen:
         button.on_pressed()
-        mock_open.assert_called_once_with("https://my-sso.awsapps.com/start")
+        mock_popen.assert_called_once_with(
+            ["aws", "sso", "login", "--sso-session", "prod"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
 
 def test_main_exits_if_not_bundled():
