@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 CONFIG_PATH = pathlib.Path.home() / ".aws" / "config"
 CACHE_DIR = pathlib.Path.home() / ".aws" / "sso" / "cache"
-CHECK_INTERVAL_SECONDS = 300  # 5 minutes
+CHECK_INTERVAL_SECONDS = 60
 
 
 def _format_status(state: sso.SessionState) -> str:
