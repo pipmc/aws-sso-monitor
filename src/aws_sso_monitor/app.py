@@ -3,17 +3,16 @@
 import datetime
 import logging
 import pathlib
+import shutil
+import subprocess
+import threading
 import webbrowser
 
 import rumps
 
-# rumps.__init__ shadows the notifications module with the decorator function,
-# so we must import the Notification class directly
-from rumps.notifications import Notification as _RumpsNotification  # noqa: E402
-
-import aws_sso_monitor.icon as icon  # noqa: E402
-import aws_sso_monitor.notifications as notifications  # noqa: E402
-import aws_sso_monitor.sso as sso  # noqa: E402
+import aws_sso_monitor.icon as icon
+import aws_sso_monitor.notifications as notifications
+import aws_sso_monitor.sso as sso
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +36,28 @@ def _format_status(state: sso.SessionState) -> str:
         mins = total_minutes % 60
         return f"{name}: {hours}h {mins}m remaining"
     return f"{name}: {total_minutes}m remaining"
+
+
+def _send_notification(notif: notifications.PendingNotification) -> None:
+    """Send a macOS notification via alerter with an 'Open SSO' action button."""
+    cmd = [
+        "alerter",
+        "--message", notif.message,
+        "--title", notif.title,
+        "--closeLabel", "Dismiss",
+        "--actions", "Open SSO",
+        "--group", notif.group,
+        "--sound", "default",
+        "--appIcon", str(icon.NOTIFICATION_ICON_SAD),
+    ]
+
+    def _run() -> None:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if result.stdout.strip() == "Open SSO":
+            webbrowser.open(notif.url)
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
 
 
 class SSOMonitorApp(rumps.App):
@@ -75,39 +96,39 @@ class SSOMonitorApp(rumps.App):
             ", ".join(f"{s.session.name}={s.status.value}" for s in states),
         )
         self._rebuild_menu(states)
+        self._update_icon(states)
         pending = self._tracker.check(states)
         for notif in pending:
-            self._send_notification(notif)
+            self._queue_or_send(notif)
 
     def _rebuild_menu(self, states: list[sso.SessionState]) -> None:
         self.menu.clear()
         for state in states:
-            self.menu.add(rumps.MenuItem(_format_status(state)))
+            item = rumps.MenuItem(_format_status(state))
+            if state.status in (
+                sso.SessionStatus.EXPIRED,
+                sso.SessionStatus.EXPIRING_SOON,
+            ):
+                item.set_callback(lambda _, url=state.session.start_url: webbrowser.open(url))
+            self.menu.add(item)
         self.menu.add(None)  # separator
         self.menu.add(rumps.MenuItem("Check Now", callback=self._on_check_now))
 
-    def _send_notification(self, notif: notifications.PendingNotification) -> None:
+    def _update_icon(self, states: list[sso.SessionState]) -> None:
+        any_expired = any(
+            s.status in (sso.SessionStatus.EXPIRED, sso.SessionStatus.EXPIRING_SOON) for s in states
+        )
+        new_icon = icon.MENUBAR_ICON_SAD if any_expired else icon.MENUBAR_ICON
+        self.icon = str(new_icon)
+
+    def _queue_or_send(self, notif: notifications.PendingNotification) -> None:
         if self._screen_locked:
             self._queued.append(notif)
         else:
             self._fire_notification(notif)
 
     def _fire_notification(self, notif: notifications.PendingNotification) -> None:
-        rumps.notification(
-            title=notif.title,
-            subtitle="",
-            message=notif.message,
-            data={"url": notif.url},
-            icon=str(icon.NOTIFICATION_ICON),
-        )
-
-    @rumps.notifications
-    def _on_notification_click(self, notification: _RumpsNotification) -> None:
-        data = notification.data
-        if isinstance(data, dict):
-            url = data.get("url")
-            if isinstance(url, str):
-                webbrowser.open(url)
+        _send_notification(notif)
 
     def _setup_screen_lock_observer(self) -> None:
         import Foundation
