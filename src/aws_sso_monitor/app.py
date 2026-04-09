@@ -42,13 +42,20 @@ def _send_notification(notif: notifications.PendingNotification) -> None:
     """Send a macOS notification via alerter with an 'Open SSO' action button."""
     cmd = [
         "alerter",
-        "--message", notif.message,
-        "--title", notif.title,
-        "--closeLabel", "Dismiss",
-        "--actions", "Open SSO",
-        "--group", notif.group,
-        "--sound", "default",
-        "--appIcon", str(icon.NOTIFICATION_ICON_SAD),
+        "--message",
+        notif.message,
+        "--title",
+        notif.title,
+        "--closeLabel",
+        "Dismiss",
+        "--actions",
+        "Open SSO",
+        "--group",
+        notif.group,
+        "--sound",
+        "default",
+        "--appIcon",
+        str(icon.NOTIFICATION_ICON_SAD),
     ]
 
     def _run() -> None:
@@ -163,4 +170,7 @@ def main() -> None:
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(message)s",
     )
+    if shutil.which("alerter") is None:
+        print("Error: 'alerter' not found. Install it with:\n  brew install vjeantet/tap/alerter")
+        raise SystemExit(1)
     SSOMonitorApp().run()

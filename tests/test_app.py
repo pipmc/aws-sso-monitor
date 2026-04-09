@@ -1,7 +1,10 @@
+import shutil
 import subprocess
 import threading
 import unittest.mock
 import webbrowser
+
+import pytest
 
 import aws_sso_monitor.app as app
 import aws_sso_monitor.icon as icon
@@ -81,3 +84,22 @@ def test_send_notification_opens_url_on_open_sso_click():
 
         mock_run.assert_called_once()
         mock_open.assert_called_once_with("https://my-sso.awsapps.com/start")
+
+
+def test_main_exits_if_alerter_not_found():
+    with (
+        unittest.mock.patch.object(shutil, "which", return_value=None),
+        unittest.mock.patch.object(app, "SSOMonitorApp"),
+    ):
+        with pytest.raises(SystemExit) as exc_info:
+            app.main()
+        assert exc_info.value.code == 1
+
+
+def test_main_starts_app_if_alerter_found():
+    with (
+        unittest.mock.patch.object(shutil, "which", return_value="/opt/homebrew/bin/alerter"),
+        unittest.mock.patch.object(app, "SSOMonitorApp") as mock_app_cls,
+    ):
+        app.main()
+        mock_app_cls.return_value.run.assert_called_once()
