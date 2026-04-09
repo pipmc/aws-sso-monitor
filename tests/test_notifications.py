@@ -113,3 +113,15 @@ def test_pending_notification_has_group_field() -> None:
         group="dev",
     )
     assert notif.group == "dev"
+
+
+def test_tracker_sets_group_to_session_name() -> None:
+    tracker = notifications.NotificationTracker()
+    session = sso.SSOSession(name="dev", start_url="https://start.awsapps.com/start", region="us-east-1")
+    expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=5)
+    state = sso.SessionState(session=session, status=sso.SessionStatus.EXPIRING_SOON, expires_at=expires_at)
+
+    pending = tracker.check([state])
+
+    assert len(pending) == 1
+    assert pending[0].group == "dev"
