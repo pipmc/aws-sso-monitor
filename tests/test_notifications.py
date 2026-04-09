@@ -103,3 +103,13 @@ def test_unknown_status_no_notification() -> None:
     state = _make_state(status=sso.SessionStatus.UNKNOWN, expires_at=None)
     pending = tracker.check([state])
     assert pending == []
+
+
+def test_pending_notification_has_group_field() -> None:
+    notif = notifications.PendingNotification(
+        title="AWS SSO Expiring Soon",
+        message="Session 'dev' expires in 5 minutes",
+        url="https://start.awsapps.com/start",
+        group="dev",
+    )
+    assert notif.group == "dev"

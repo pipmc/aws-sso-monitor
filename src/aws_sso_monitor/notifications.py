@@ -9,6 +9,7 @@ class PendingNotification:
     title: str
     message: str
     url: str
+    group: str
 
 
 @dataclasses.dataclass
@@ -52,6 +53,7 @@ class NotificationTracker:
                         title="AWS SSO Expiring Soon",
                         message=f"Session '{name}' expires in {minutes} minutes",
                         url=state.session.start_url,
+                        group=name,
                     )
                 )
             elif state.status == sso.SessionStatus.EXPIRED and not tracked.notified_expired:
@@ -61,6 +63,7 @@ class NotificationTracker:
                         title="AWS SSO Session Expired",
                         message=f"Session '{name}' has expired",
                         url=state.session.start_url,
+                        group=name,
                     )
                 )
 
