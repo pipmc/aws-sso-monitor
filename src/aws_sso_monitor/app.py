@@ -3,7 +3,6 @@
 import datetime
 import logging
 import pathlib
-import shutil
 import webbrowser
 
 import desktop_notifier
@@ -154,12 +153,22 @@ class SSOMonitorApp(rumps.App):
             self._fire_notification(notif)
 
 
+def _is_bundled() -> bool:
+    """Check whether we're running inside a macOS .app bundle."""
+    import Foundation
+
+    return Foundation.NSBundle.mainBundle.bundleIdentifier is not None
+
+
 def main() -> None:
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(message)s",
     )
-    if shutil.which("alerter") is None:
-        print("Error: 'alerter' not found. Install it with:\n  brew install vjeantet/tap/alerter")
+    if not _is_bundled():
+        print(
+            "Error: AWS SSO Monitor must be run as a bundled .app.\n"
+            "Build and install with: scripts/build.sh"
+        )
         raise SystemExit(1)
     SSOMonitorApp().run()

@@ -45,11 +45,9 @@ def test_send_notification_button_opens_url():
         mock_open.assert_called_once_with("https://my-sso.awsapps.com/start")
 
 
-def test_main_exits_if_alerter_not_found():
-    import shutil
-
+def test_main_exits_if_not_bundled():
     with (
-        unittest.mock.patch.object(shutil, "which", return_value=None),
+        unittest.mock.patch.object(app, "_is_bundled", return_value=False),
         unittest.mock.patch.object(app, "SSOMonitorApp"),
     ):
         with pytest.raises(SystemExit) as exc_info:
@@ -57,11 +55,9 @@ def test_main_exits_if_alerter_not_found():
         assert exc_info.value.code == 1
 
 
-def test_main_starts_app_if_alerter_found():
-    import shutil
-
+def test_main_starts_app_if_bundled():
     with (
-        unittest.mock.patch.object(shutil, "which", return_value="/opt/homebrew/bin/alerter"),
+        unittest.mock.patch.object(app, "_is_bundled", return_value=True),
         unittest.mock.patch.object(app, "SSOMonitorApp") as mock_app_cls,
     ):
         app.main()
