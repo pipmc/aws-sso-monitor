@@ -117,9 +117,13 @@ def test_pending_notification_has_group_field() -> None:
 
 def test_tracker_sets_group_to_session_name() -> None:
     tracker = notifications.NotificationTracker()
-    session = sso.SSOSession(name="dev", start_url="https://start.awsapps.com/start", region="us-east-1")
+    session = sso.SSOSession(
+        name="dev", start_url="https://start.awsapps.com/start", region="us-east-1"
+    )
     expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=5)
-    state = sso.SessionState(session=session, status=sso.SessionStatus.EXPIRING_SOON, expires_at=expires_at)
+    state = sso.SessionState(
+        session=session, status=sso.SessionStatus.EXPIRING_SOON, expires_at=expires_at
+    )
 
     pending = tracker.check([state])
 
