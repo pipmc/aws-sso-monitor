@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """Generate icons from the official AWS logo SVG.
 
-Produces three PNGs:
-  - menubar-icon.png          (happy, black template for macOS menu bar)
-  - menubar-icon-sad.png      (sad/frown, black template)
-  - notification-icon-sad.png (sad/frown, full colour for alerter notifications)
+Produces two PNGs:
+  - menubar-icon.png      (happy, black template for macOS menu bar)
+  - menubar-icon-sad.png  (sad/frown, black template)
 
-The "sad" variants flip the orange arrow vertically so the smile becomes a frown.
+The "sad" variant flips the orange arrow vertically so the smile becomes a frown.
 Text strokes are added to improve legibility at small sizes.
 
 Uses macOS AppKit (NSImage) for SVG rendering — no external dependencies beyond pyobjc.
@@ -146,35 +145,8 @@ def generate_menubar_icons() -> None:
         print(f"  Created {path.name} ({size}x{size})")
 
 
-def generate_notification_icon() -> None:
-    """Generate 256x256 sad colour icon for alerter notifications.
-
-    The logo is scaled to fit inside the circular mask that macOS applies
-    to notification icons, with padding so nothing gets cropped.
-    """
-    size = 256
-    # Fit the landscape logo (304x182) inside ~75% of the canvas so it
-    # clears the circular notification mask with room to spare.
-    inner = int(size * 0.75)
-    render_w = inner
-    render_h = int(inner * 182 / 304)
-
-    svg = _build_svg(sad=True, colour=True, text_stroke_width=2)
-    rendered = _svg_to_pil(svg, render_w, render_h)
-
-    img = PIL.Image.new("RGBA", (size, size), (255, 255, 255, 255))
-    offset_x = (size - render_w) // 2
-    offset_y = (size - render_h) // 2
-    img.paste(rendered, (offset_x, offset_y), rendered)
-
-    path = RESOURCES_DIR / "notification-icon-sad.png"
-    img.save(path)
-    print(f"  Created {path.name} ({size}x{size})")
-
-
 if __name__ == "__main__":
     print("Generating AWS SSO Monitor icons...")
     RESOURCES_DIR.mkdir(parents=True, exist_ok=True)
     generate_menubar_icons()
-    generate_notification_icon()
     print(f"Done. Icons in {RESOURCES_DIR}")
