@@ -4,4 +4,6 @@
 import desktop_notifier.backends.dummy
 import desktop_notifier.main
 
-desktop_notifier.main.get_backend_class = lambda: desktop_notifier.backends.dummy.DummyNotificationCenter
+desktop_notifier.main.get_backend_class = lambda: (
+    desktop_notifier.backends.dummy.DummyNotificationCenter
+)
